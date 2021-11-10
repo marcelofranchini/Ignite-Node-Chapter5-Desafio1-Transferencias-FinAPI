@@ -1,9 +1,9 @@
-import { CreateStatementUseCase } from './CreateStatementUseCase';
+import { CreateTransferUseCase } from './CreateTransferUseCase';
 
 import { OperationType } from '../../entities/Statement';
 
 import { User } from '../../../users/entities/User';
-import { CreateStatementError } from './CreateStatementError';
+import { CreateStatementError } from './CreateTransferError';
 import { IUsersRepository } from '../../../users/repositories/IUsersRepository';
 import { IStatementsRepository } from '../../repositories/IStatementsRepository';
 import { InMemoryUsersRepository } from '../../../users/repositories/in-memory/InMemoryUsersRepository';
@@ -11,7 +11,7 @@ import { InMemoryStatementsRepository } from '../../repositories/in-memory/InMem
 import UserNotFound = CreateStatementError.UserNotFound;
 import InsufficientFunds = CreateStatementError.InsufficientFunds;
 
-let createStatementUseCase: CreateStatementUseCase;
+let createStatementUseCase: CreateTransferUseCase;
 let usersRepository: IUsersRepository;
 let statementRepository: IStatementsRepository;
 
@@ -21,7 +21,7 @@ describe('Create Statement Use Case', () => {
     usersRepository = new InMemoryUsersRepository();
     statementRepository = new InMemoryStatementsRepository();
 
-    createStatementUseCase = new CreateStatementUseCase(
+    createStatementUseCase = new CreateTransferUseCase(
       usersRepository,
       statementRepository
     );

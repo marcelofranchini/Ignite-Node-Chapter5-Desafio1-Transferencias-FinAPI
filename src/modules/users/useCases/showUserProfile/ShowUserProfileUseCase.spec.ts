@@ -1,42 +1,38 @@
-import { request } from "express";
-import { InMemoryUsersRepository } from "../../repositories/in-memory/InMemoryUsersRepository";
-import { AuthenticateUserUseCase } from "../authenticateUser/AuthenticateUserUseCase";
-import { CreateUserUseCase } from "../createUser/CreateUserUseCase";
-import { ShowUserProfileUseCase } from "./ShowUserProfileUseCase";
 
-let showUserProfileUserUseCase: ShowUserProfileUseCase;
-let usersRepository: InMemoryUsersRepository;
-let authenticateUserUseCase: AuthenticateUserUseCase;
-let createUserUseCase: CreateUserUseCase;
+import { IUsersRepository } from '../../repositories/IUsersRepository';
+import { InMemoryUsersRepository } from '../../repositories/in-memory/InMemoryUsersRepository';
 
-describe("Listar Usuário Logado", () => {
-  beforeAll(() => {
+import {ShowUserProfileUseCase} from "./ShowUserProfileUseCase";
+import {User} from "../../entities/User";
+import {ShowUserProfileError} from "./ShowUserProfileError";
+
+let showUserProfileUseCase: ShowUserProfileUseCase;
+let usersRepository: IUsersRepository;
+
+describe('Show Profile User', () => {
+  beforeEach(() => {
     usersRepository = new InMemoryUsersRepository();
-    showUserProfileUserUseCase = new ShowUserProfileUseCase(usersRepository);
-    authenticateUserUseCase = new AuthenticateUserUseCase(usersRepository);
-    createUserUseCase = new CreateUserUseCase(usersRepository);
+    showUserProfileUseCase = new ShowUserProfileUseCase(usersRepository);
   });
 
-  it("Deve ser possível retornar o usuario logado", async () => {
-    const user = {
-      name: "Marcelo",
-      email: "123",
-      password: "123",
-    };
-
-    await createUserUseCase.execute(user);
-
-    const authenticateUser = await authenticateUserUseCase.execute({
-      email: "123",
-      password: "123",
+  it('should be able to show user profile', async () => {
+    const user = await usersRepository.create({
+      name: 'John do',
+      email: 'john@do.com',
+      password: '123123'
     });
 
-    const listUser = await showUserProfileUserUseCase.execute(
-      authenticateUser.user.id as string
-    );
+    const userProfile = await showUserProfileUseCase.execute(user.id);
 
-    expect(listUser).toHaveProperty("id");
-    expect(listUser).toHaveProperty("email");
-    expect(listUser).toHaveProperty("name");
+    expect(userProfile).toBeInstanceOf(User);
+    expect(userProfile).toEqual(expect.objectContaining({
+      name: user.name,
+      email: user.email,
+    }));
+  });
+
+  it('should not be able to show user profile non existing user', async () => {
+    await expect(showUserProfileUseCase.execute('non-existing-user'))
+      .rejects.toBeInstanceOf(ShowUserProfileError);
   });
 });

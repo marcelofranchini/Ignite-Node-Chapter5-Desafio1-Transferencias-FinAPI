@@ -16,17 +16,14 @@ interface IRequest {
 @injectable()
 export class AuthenticateUserUseCase {
   constructor(
-    @inject("UsersRepository")
-    private usersRepository: IUsersRepository
+    @inject('UsersRepository')
+    private usersRepository: IUsersRepository,
   ) {}
 
-  async execute({
-    email,
-    password,
-  }: IRequest): Promise<IAuthenticateUserResponseDTO> {
+  async execute({ email, password }: IRequest): Promise<IAuthenticateUserResponseDTO> {
     const user = await this.usersRepository.findByEmail(email);
 
-    if (!user) {
+    if(!user) {
       throw new IncorrectEmailOrPasswordError();
     }
 
@@ -38,9 +35,7 @@ export class AuthenticateUserUseCase {
 
     const { secret, expiresIn } = authConfig.jwt;
 
-    // console.log(secret, expiresIn);
-
-    const token = sign({ user }, "senhasupersecreta123", {
+    const token = sign({ user }, secret, {
       subject: user.id,
       expiresIn,
     });
@@ -49,9 +44,9 @@ export class AuthenticateUserUseCase {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email,
+        email: user.email
       },
-      token,
-    };
+      token
+    }
   }
 }

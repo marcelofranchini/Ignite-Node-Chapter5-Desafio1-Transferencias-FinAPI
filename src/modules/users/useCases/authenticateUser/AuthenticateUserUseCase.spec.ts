@@ -1,63 +1,31 @@
-import { response } from "express";
-import { InMemoryUsersRepository } from "../../repositories/in-memory/InMemoryUsersRepository";
-import { CreateUserUseCase } from "../createUser/CreateUserUseCase";
-import { AuthenticateUserUseCase } from "./AuthenticateUserUseCase";
-import { IncorrectEmailOrPasswordError } from "./IncorrectEmailOrPasswordError";
+import { hash } from 'bcryptjs';
 
-let createUserUseCase: CreateUserUseCase;
-let usersRepository: InMemoryUsersRepository;
-let authenticateUserUseCase: AuthenticateUserUseCase;
-describe("Authenticate", () => {
-  beforeAll(() => {
+import { AuthenticateUserUseCase } from './AuthenticateUserUseCase';
+import { IUsersRepository } from '../../repositories/IUsersRepository';
+import { InMemoryUsersRepository } from '../../repositories/in-memory/InMemoryUsersRepository';
+
+let authenticateUseCase: AuthenticateUserUseCase;
+let usersRepository: IUsersRepository;
+
+describe('Authenticate User', () => {
+  beforeEach(() => {
     usersRepository = new InMemoryUsersRepository();
-    createUserUseCase = new CreateUserUseCase(usersRepository);
-    authenticateUserUseCase = new AuthenticateUserUseCase(usersRepository);
+    authenticateUseCase = new AuthenticateUserUseCase(usersRepository);
   });
 
-  it("Deve autenticar o usuário", async () => {
-    await createUserUseCase.execute({
-      name: "Marcelo",
-      email: "123",
-      password: "123",
+  it('should be able to authenticate an user', async () => {
+    const user = await usersRepository.create({
+      name: 'John do',
+      email: 'john@do.com',
+      password: '123123'
     });
 
-    const authenticateUser = await authenticateUserUseCase.execute({
-      email: "123",
-      password: "123",
+    const authUser = await authenticateUseCase.execute({
+      email: user.email,
+      password: '123123',
     });
 
-    expect(authenticateUser).toHaveProperty("user");
-    expect(authenticateUser).toHaveProperty("token");
-    expect(response.statusCode).toBe(200);
+    expect(authUser).toHaveProperty('token');
   });
 
-  it("Não deve se autenticar com email errado", async () => {
-    expect(async () => {
-      await createUserUseCase.execute({
-        name: "Marcelo",
-        email: "1234",
-        password: "1234",
-      });
-
-      await authenticateUserUseCase.execute({
-        email: "123kk",
-        password: "123",
-      });
-    }).rejects.toBeInstanceOf(IncorrectEmailOrPasswordError);
-  });
-
-  it("Não deve se autenticar com senha errada", async () => {
-    expect(async () => {
-      await createUserUseCase.execute({
-        name: "Marcelo",
-        email: "12345",
-        password: "12345",
-      });
-
-      await authenticateUserUseCase.execute({
-        email: "123",
-        password: "123ooo",
-      });
-    }).rejects.toBeInstanceOf(IncorrectEmailOrPasswordError);
-  });
 });
